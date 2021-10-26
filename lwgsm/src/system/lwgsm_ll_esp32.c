@@ -52,7 +52,7 @@
 #endif /* !defined(LWGSM_USART_DMA_RX_BUFF_SIZE) */
 
 #if !defined(LWGSM_MEM_SIZE)
-#define LWGSM_MEM_SIZE                    0x500
+#define LWGSM_MEM_SIZE                    0x1024
 #endif /* !defined(LWGSM_MEM_SIZE) */
 
 static QueueHandle_t gsm_uart_queue;

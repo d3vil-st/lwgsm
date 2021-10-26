@@ -1111,6 +1111,9 @@ lwgsm_mqtt_client_new(size_t tx_buff_len, size_t rx_buff_len) {
                 lwgsm_mem_free_s((void**)&client);
             }
         }
+    } else {
+        LWGSM_DEBUGF(LWGSM_CFG_DBG_MQTT_TRACE,
+                "[MQTT] Cannot allocate memory: %d", sizeof(*client));
     }
     return client;
 }
@@ -1155,7 +1158,7 @@ lwgsm_mqtt_client_connect(lwgsm_mqtt_client_p client, const char* host, lwgsm_po
         client->evt_fn = evt_fn != NULL ? evt_fn : mqtt_evt_fn_default;
 
         /* Start a new connection in non-blocking mode */
-        res = lwgsm_conn_start(&client->conn, LWGSM_CONN_TYPE_TCP, host, port, client, mqtt_conn_cb, 0);
+        res = lwgsm_conn_start(&client->conn, LWGSM_CONN_TYPE_SSL, host, port, client, mqtt_conn_cb, 0);
         if (res == lwgsmOK) {
             client->conn_state = LWGSM_MQTT_CONN_CONNECTING;
         }

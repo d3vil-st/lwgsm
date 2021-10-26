@@ -33,6 +33,7 @@
  */
 #include "lwgsm/apps/lwgsm_mqtt_client_api.h"
 #include "lwgsm/lwgsm_mem.h"
+#include <esp_log.h>
 
 /* Tracing debug message */
 #define LWGSM_CFG_DBG_MQTT_API_TRACE              (LWGSM_CFG_DBG_MQTT_API | LWGSM_DBG_TYPE_TRACE)
@@ -218,10 +219,13 @@ mqtt_evt(lwgsm_mqtt_client_p client, lwgsm_mqtt_evt_t* evt) {
  */
 lwgsm_mqtt_client_api_p
 lwgsm_mqtt_client_api_new(size_t tx_buff_len, size_t rx_buff_len) {
+    LWGSM_DEBUGF(LWGSM_CFG_DBG_MQTT_API_TRACE,
+              "[MQTT API] Creating client");
     lwgsm_mqtt_client_api_p client;
     size_t size;
 
     size = LWGSM_MEM_ALIGN(sizeof(*client));    /* Get size of client itself */
+
 
     /* Create client APi structure */
     client = lwgsm_mem_calloc(1, size);         /* Allocate client memory */
@@ -238,23 +242,23 @@ lwgsm_mqtt_client_api_new(size_t tx_buff_len, size_t rx_buff_len) {
                         lwgsm_mqtt_client_set_arg(client->mc, client);  /* Set client to mqtt client argument */
                         return client;
                     } else {
-                        LWGSM_DEBUGF(LWGSM_CFG_DBG_MQTT_API,
+                        LWGSM_DEBUGF(LWGSM_CFG_DBG_MQTT_API_TRACE,
                                    "[MQTT API] Cannot allocate mutex\r\n");
                     }
                 } else {
-                    LWGSM_DEBUGF(LWGSM_CFG_DBG_MQTT_API,
+                    LWGSM_DEBUGF(LWGSM_CFG_DBG_MQTT_API_TRACE,
                                "[MQTT API] Cannot allocate sync semaphore\r\n");
                 }
             } else {
-                LWGSM_DEBUGF(LWGSM_CFG_DBG_MQTT_API,
+                LWGSM_DEBUGF(LWGSM_CFG_DBG_MQTT_API_TRACE,
                            "[MQTT API] Cannot allocate receive queue\r\n");
             }
         } else {
-            LWGSM_DEBUGF(LWGSM_CFG_DBG_MQTT_API,
+            LWGSM_DEBUGF(LWGSM_CFG_DBG_MQTT_API_TRACE,
                        "[MQTT API] Cannot allocate MQTT client\r\n");
         }
     } else {
-        LWGSM_DEBUGF(LWGSM_CFG_DBG_MQTT_API,
+        LWGSM_DEBUGF(LWGSM_CFG_DBG_MQTT_API_TRACE,
                    "[MQTT API] Cannot allocate memory for client\r\n");
     }
 

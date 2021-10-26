@@ -31,9 +31,7 @@
  * Version:         v0.1.0
  */
 #include "system/lwgsm_sys.h"
-#include "FreeRTOS.h"
-#include "task.h"
-#include "semphr.h"
+#include "freertos/FreeRTOS.h"
 
 #if !__DOXYGEN__
 

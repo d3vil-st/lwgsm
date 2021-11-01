@@ -303,6 +303,9 @@ typedef struct lwgsm_conn {
             uint8_t bearer: 1;                  /*!< Bearer used. Can be `1` or `0` */
         } f;                                    /*!< Connection flags */
     } status;                                   /*!< Connection status union with flag bits */
+    uint32_t tcp_available_data;
+    uint32_t bytes_awaiting;
+    uint8_t auto_receive;
 } lwgsm_conn_t;
 
 /**
@@ -425,12 +428,20 @@ typedef struct lwgsm_msg {
             lwgsm_conn_t** conn;                /*!< Pointer to pointer to save connection used */
             const char* host;                   /*!< Host to use for connection */
             lwgsm_port_t port;                  /*!< Remote port used for connection */
+            uint8_t auto_receive;
             lwgsm_conn_type_t type;             /*!< Connection type */
             void* arg;                          /*!< Connection custom argument */
             lwgsm_evt_fn evt_func;              /*!< Callback function to use on connection */
             uint8_t num;                        /*!< Connection number used for start */
             lwgsm_conn_connect_res_t conn_res;  /*!< Connection result status */
         } conn_start;                           /*!< Structure for starting new connection */
+        struct {
+            lwgsm_conn_t** conn;                /*!< Pointer to pointer to save connection used */
+            lwgsm_evt_fn evt_func;              /*!< Callback function to use on connection */
+            uint16_t len;                 /*!< Requested number of data bytes (1-1460 bytes) to be read */
+            uint8_t mode;                       /*!< RXGET mode to set */
+            uint8_t num;                        /*!< Connection number used for start */
+        } conn_rxget;                           /*!< Structure for starting new connection */
         struct {
             lwgsm_conn_t* conn;                 /*!< Pointer to connection to close */
             uint8_t val_id;                     /*!< Connection current validation ID when command was sent to queue */

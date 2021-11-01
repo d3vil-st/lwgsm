@@ -191,7 +191,7 @@ lwgsmi_conn_init(void) {
  */
 lwgsmr_t
 lwgsm_conn_start(lwgsm_conn_p* conn, lwgsm_conn_type_t type, const char* const host, lwgsm_port_t port,
-               void* const arg, lwgsm_evt_fn conn_evt_fn, const uint32_t blocking) {
+                 const uint8_t auto_receive, void* const arg, lwgsm_evt_fn conn_evt_fn, const uint32_t blocking) {
     LWGSM_MSG_VAR_DEFINE(msg);
 
     LWGSM_ASSERT("host != NULL", host != NULL);
@@ -206,6 +206,7 @@ lwgsm_conn_start(lwgsm_conn_p* conn, lwgsm_conn_type_t type, const char* const h
     LWGSM_MSG_VAR_REF(msg).msg.conn_start.type = type;
     LWGSM_MSG_VAR_REF(msg).msg.conn_start.host = host;
     LWGSM_MSG_VAR_REF(msg).msg.conn_start.port = port;
+    LWGSM_MSG_VAR_REF(msg).msg.conn_start.auto_receive = auto_receive;
     LWGSM_MSG_VAR_REF(msg).msg.conn_start.evt_func = conn_evt_fn;
     LWGSM_MSG_VAR_REF(msg).msg.conn_start.arg = arg;
 
@@ -324,18 +325,62 @@ lwgsm_conn_recved(lwgsm_conn_p conn, lwgsm_pbuf_p pbuf) {
 #if LWGSM_CFG_CONN_MANUAL_TCP_RECEIVE
     size_t len;
     len = lwgsm_pbuf_length(pbuf, 1);           /* Get length of pbuf */
-    if (conn->tcp_available_data > len) {
-        conn->tcp_available_data -= len;        /* Decrease for available length */
+    /*
+        if (conn->tcp_available_data > len) {
+        conn->tcp_available_data -= len;         Decrease for available length
         if (conn->tcp_available_data > 0) {
-            /* Start new manual receive here... */
+          lwgsm_conn_rxget(conn, 2, len, 0);
         }
-    }
+    }*/
 #else /* LWGSM_CFG_CONN_MANUAL_TCP_RECEIVE */
     LWGSM_UNUSED(conn);
     LWGSM_UNUSED(pbuf);
 #endif /* !LWGSM_CFG_CONN_MANUAL_TCP_RECEIVE */
     return lwgsmOK;
 }
+#if LWGSM_CFG_CONN_MANUAL_TCP_RECEIVE
+/**
+ * \brief           Start a new connection of specific type
+ * \param[out]      conn: Pointer to connection handle to set new connection reference in case of successful connection
+ * \param[in]       mode: Mode for RXGET
+ * \param[in]       blocking: Status whether command should be blocking or not
+ * \return          \ref lwgsmOK on success, member of \ref lwgsmr_t enumeration otherwise
+ */
+lwgsmr_t
+lwgsm_conn_rxget_set(lwgsm_conn_p conn, const uint8_t mode, const uint32_t blocking) {
+  LWGSM_MSG_VAR_DEFINE(msg);
+
+  LWGSM_MSG_VAR_ALLOC(msg, blocking);
+  LWGSM_MSG_VAR_REF(msg).cmd_def = LWGSM_CMD_CIPRXGET_SET;
+  LWGSM_MSG_VAR_REF(msg).msg.conn_rxget.num = conn->num;
+  LWGSM_MSG_VAR_REF(msg).msg.conn_rxget.mode = mode;
+
+  return lwgsmi_send_msg_to_producer_mbox(&LWGSM_MSG_VAR_REF(msg), lwgsmi_initiate_cmd, 60000);
+}
+
+/**
+ * \brief           Start a new connection of specific type
+ * \param[out]      conn: Pointer to connection handle to set new connection reference in case of successful connection
+ * \param[in]       mode: Mode for RXGET
+ * \param[in]       reqlength: requested length
+ * \param[in]       cnflength: length ready to accept
+ * \param[in]       blocking: Status whether command should be blocking or not
+ * \return          \ref lwgsmOK on success, member of \ref lwgsmr_t enumeration otherwise
+ */
+lwgsmr_t
+lwgsm_conn_rxget(lwgsm_conn_p conn, const uint8_t mode, const uint32_t len, const uint32_t blocking) {
+
+  LWGSM_MSG_VAR_DEFINE(msg);
+
+  LWGSM_MSG_VAR_ALLOC(msg, blocking);
+  LWGSM_MSG_VAR_REF(msg).cmd_def = LWGSM_CMD_CIPRXGET;
+  LWGSM_MSG_VAR_REF(msg).msg.conn_rxget.num = conn->num;
+  LWGSM_MSG_VAR_REF(msg).msg.conn_rxget.mode = mode;
+  LWGSM_MSG_VAR_REF(msg).msg.conn_rxget.len = LWGSM_MIN(LWGSM_CFG_CONN_MAX_DATA_LEN, len);
+
+  return lwgsmi_send_msg_to_producer_mbox(&LWGSM_MSG_VAR_REF(msg), lwgsmi_initiate_cmd, 60000);
+}
+#endif /* !LWGSM_CFG_CONN_MANUAL_TCP_RECEIVE */
 
 /**
  * \brief           Set argument variable for connection

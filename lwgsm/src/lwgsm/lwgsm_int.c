@@ -723,6 +723,8 @@ lwgsmi_parse_received(lwgsm_recv_t* rcv) {
 #if LWGSM_CFG_CONN
         } else if (!strncmp(rcv->data, "+RECEIVE", 8)) {
             lwgsmi_parse_ipd(rcv->data);        /* Parse IPD */
+        } else if (!strncmp(rcv->data, "+CIPRXGET", 9)) {
+          lwgsmi_parse_rxget(rcv->data);        /* Parse CIPRXGET */
 #endif /* LWGSM_CFG_CONN */
         } else if (!strncmp(rcv->data, "+CREG", 5)) {   /* Check for +CREG indication */
             lwgsmi_parse_creg(rcv->data, LWGSM_U8(CMD_IS_CUR(LWGSM_CMD_CREG_GET))); /* Parse +CREG response */
@@ -930,6 +932,7 @@ lwgsmi_parse_received(lwgsm_recv_t* rcv) {
                         id = conn->val_id;
                         LWGSM_MEMSET(conn, 0x00, sizeof(*conn));/* Reset connection parameters */
                         conn->num = num;
+                        conn->auto_receive = lwgsm.msg->msg.conn_start.auto_receive;
                         conn->status.f.active = 1;
                         conn->val_id = ++id;    /* Set new validation ID */
 
@@ -1067,7 +1070,6 @@ lwgsmi_process(const void* data, size_t data_len) {
 #if LWGSM_CFG_CONN
         } else if (lwgsm.m.ipd.read) {          /* Read connection data */
             size_t len;
-
             if (lwgsm.m.ipd.buff != NULL) {     /* Do we have active buffer? */
                 lwgsm.m.ipd.buff->payload[lwgsm.m.ipd.buff_ptr] = ch;   /* Save data character */
             }
@@ -1617,7 +1619,9 @@ lwgsmi_process_sub_cmd(lwgsm_msg_t* msg, uint8_t* is_ok, uint16_t* is_error) {
                 SET_NEW_CMD_CHECK_ERROR(LWGSM_CMD_CIPMUX_SET);
                 break;
             case 6:
+#if LWGSM_CFG_CONN_MANUAL_TCP_RECEIVE
                 SET_NEW_CMD_CHECK_ERROR(LWGSM_CMD_CIPRXGET_SET);
+#endif
                 break;
             case 7:
                 SET_NEW_CMD_CHECK_ERROR(LWGSM_CMD_CSTT_SET);
@@ -2244,9 +2248,19 @@ lwgsmi_initiate_cmd(lwgsm_msg_t* msg) {
             AT_PORT_SEND_END_AT();
             break;
         }
+        case LWGSM_CMD_CIPRXGET: {
+            AT_PORT_SEND_BEGIN_AT();
+            AT_PORT_SEND_CONST_STR("+CIPRXGET=");
+            lwgsmi_send_number(msg->msg.conn_rxget.mode, 0, 0);
+            lwgsmi_send_number(msg->msg.conn_rxget.num, 0, 1);
+            if (msg->msg.conn_rxget.mode == 2 || msg->msg.conn_rxget.mode == 3)
+              lwgsmi_send_number(msg->msg.conn_rxget.len, 0, 1);
+            AT_PORT_SEND_END_AT();
+            break;
+        }
         case LWGSM_CMD_CIPRXGET_SET: {
             AT_PORT_SEND_BEGIN_AT();
-            AT_PORT_SEND_CONST_STR("+CIPRXGET=0");
+            AT_PORT_SEND_CONST_STR("+CIPRXGET=1");
             AT_PORT_SEND_END_AT();
             break;
         }

@@ -65,8 +65,11 @@ typedef enum {
 
 lwgsm_netconn_p   lwgsm_netconn_new(lwgsm_netconn_type_t type);
 lwgsmr_t          lwgsm_netconn_delete(lwgsm_netconn_p nc);
-lwgsmr_t          lwgsm_netconn_connect(lwgsm_netconn_p nc, const char* host, lwgsm_port_t port);
-lwgsmr_t          lwgsm_netconn_receive(lwgsm_netconn_p nc, lwgsm_pbuf_p* pbuf);
+lwgsmr_t          lwgsm_netconn_connect(lwgsm_netconn_p nc, const char* host, lwgsm_port_t port, const uint8_t auto_receive);
+lwgsmr_t          lwgsm_netconn_receive(lwgsm_netconn_p nc, lwgsm_pbuf_p* pbuf, uint32_t len);
+#if LWGSM_CFG_CONN_MANUAL_TCP_RECEIVE
+size_t            lwgsm_netconn_rxget_available(lwgsm_netconn_p nc);
+#endif
 lwgsmr_t          lwgsm_netconn_close(lwgsm_netconn_p nc);
 int8_t          lwgsm_netconn_getconnnum(lwgsm_netconn_p nc);
 void            lwgsm_netconn_set_receive_timeout(lwgsm_netconn_p nc, uint32_t timeout);

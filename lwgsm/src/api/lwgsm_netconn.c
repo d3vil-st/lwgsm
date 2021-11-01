@@ -291,7 +291,7 @@ lwgsm_netconn_delete(lwgsm_netconn_p nc) {
  * \return          \ref lwgsmOK if successfully connected, member of \ref lwgsmr_t otherwise
  */
 lwgsmr_t
-lwgsm_netconn_connect(lwgsm_netconn_p nc, const char* host, lwgsm_port_t port) {
+lwgsm_netconn_connect(lwgsm_netconn_p nc, const char* host, lwgsm_port_t port, const uint8_t auto_receive) {
     lwgsmr_t res;
 
     LWGSM_ASSERT("nc != NULL", nc != NULL);
@@ -305,7 +305,7 @@ lwgsm_netconn_connect(lwgsm_netconn_p nc, const char* host, lwgsm_port_t port) {
      *  - Set netconn callback function for connection management
      *  - Start connection in blocking mode
      */
-    res = lwgsm_conn_start(NULL, (lwgsm_conn_type_t)nc->type, host, port, nc, netconn_evt, 1);
+    res = lwgsm_conn_start(&nc->conn, (lwgsm_conn_type_t)nc->type, host, port, auto_receive, nc, netconn_evt, 1);
     return res;
 }
 
@@ -464,7 +464,7 @@ lwgsm_netconn_sendto(lwgsm_netconn_p nc, const lwgsm_ip_t* ip, lwgsm_port_t port
  * \return          Any other member of \ref lwgsmr_t otherwise
  */
 lwgsmr_t
-lwgsm_netconn_receive(lwgsm_netconn_p nc, lwgsm_pbuf_p* pbuf) {
+lwgsm_netconn_receive(lwgsm_netconn_p nc, lwgsm_pbuf_p* pbuf, uint32_t len) {
     LWGSM_ASSERT("nc != NULL", nc != NULL);
     LWGSM_ASSERT("pbuf != NULL", pbuf != NULL);
 
@@ -474,6 +474,14 @@ lwgsm_netconn_receive(lwgsm_netconn_p nc, lwgsm_pbuf_p* pbuf) {
      * Wait for new received data for up to specific timeout
      * or throw error for timeout notification
      */
+    // ESP_LOGW(__func__, "nc has: %d requested %d", nc->conn->tcp_available_data, len);
+
+    if (len == 0)
+      len = LWGSM_CFG_CONN_MAX_DATA_LEN;
+
+    nc->conn->bytes_awaiting = LWGSM_MIN(len, LWGSM_CFG_CONN_MAX_DATA_LEN);
+    lwgsm_conn_rxget(nc->conn, 4, 0, 0);
+
     if (lwgsm_sys_mbox_get(&nc->mbox_receive, (void**)pbuf, nc->rcv_timeout) == LWGSM_SYS_TIMEOUT) {
         return lwgsmTIMEOUT;
     }
@@ -524,6 +532,19 @@ lwgsm_netconn_getconnnum(lwgsm_netconn_p nc) {
         return lwgsm_conn_getnum(nc->conn);
     }
     return -1;
+}
+
+/**
+ * \brief           Get connection number used for netconn
+ * \param[in]       nc: Netconn handle
+ * \return          data available to read `-1` if connection not available
+ */
+size_t
+lwgsm_netconn_rxget_available(lwgsm_netconn_p nc) {
+  if (nc != NULL && nc->conn != NULL) {
+    return nc->conn->tcp_available_data;
+  }
+  return -1;
 }
 
 #if LWGSM_CFG_NETCONN_RECEIVE_TIMEOUT || __DOXYGEN__

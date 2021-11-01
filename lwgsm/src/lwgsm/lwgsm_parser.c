@@ -1106,4 +1106,67 @@ lwgsmi_parse_ipd(const char* str) {
     return 1;
 }
 
+/**
+ * \brief           Parse IPD or RECEIVE statements
+ * \param[in]       str: Input string
+ * \return          `1` on success, `0` otherwise
+ */
+uint8_t
+lwgsmi_parse_rxget(const char* str) {
+  // ESP_LOGW(__func__, "start parsing");
+  uint8_t conn;
+  uint8_t mode;
+  size_t len, cnflen;
+  lwgsm_conn_p c;
+
+  if (*str == '+') {
+    str += 11;
+  }
+
+  mode = lwgsmi_parse_number(&str);           /* Parse mode for RXGET */
+  conn = lwgsmi_parse_number(&str);            /* Parse connection number */
+
+  // ESP_LOGW(__func__, "mode: %d conn: %d", mode, conn);
+
+  c = conn < LWGSM_CFG_MAX_CONNS ? &lwgsm.m.conns[conn] : NULL;   /* Get connection handle */
+  if (c == NULL) {                            /* Invalid connection number */
+    return 0;
+  }
+
+  switch (mode) {
+    case (1):
+      // ESP_LOGW(__func__, "Got new data on conn %d", conn);
+      lwgsm_conn_rxget(c, 4, 0, 0);
+      break;
+    case (2):
+    case (3):
+      len = lwgsmi_parse_number(&str);             /* Parse received length */
+      cnflen = lwgsmi_parse_number(&str);             /* Parse received length */
+      c->tcp_available_data = cnflen;
+      // ESP_LOGW(__func__, "len: %d cnflen: %d", len, cnflen);
+      if (len > 0 ) {
+          lwgsm.m.ipd.read = 1;                       /* Start reading network data */
+          lwgsm.m.ipd.tot_len = len;                  /* Total number of bytes in this received packet */
+          lwgsm.m.ipd.rem_len = len;                  /* Number of remaining bytes to read */
+          lwgsm.m.ipd.conn = c;                       /* Pointer to connection we have data for */
+      }
+      break;
+    case (4):
+      cnflen = lwgsmi_parse_number(&str);             /* Parse received length */
+      // ESP_LOGW(__func__, "Updating conn %d avail data: %d awaiting: %d", conn, cnflen, c->bytes_awaiting);
+      c->tcp_available_data = cnflen;
+      if (c->auto_receive)
+        lwgsm_conn_rxget(c, 2, LWGSM_MIN(c->tcp_available_data, LWGSM_CFG_CONN_MAX_DATA_LEN), 0);
+
+      if (c->bytes_awaiting > 0 && c->tcp_available_data > 0 ) {
+        lwgsm_conn_rxget(c, 2, LWGSM_MIN(c->bytes_awaiting, c->tcp_available_data), 0);
+        c->bytes_awaiting = 0;
+      }
+      break;
+    default: ;
+  }
+
+  return 1;
+}
+
 #endif /* LWGSM_CFG_CONN */

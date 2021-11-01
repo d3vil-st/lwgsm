@@ -48,11 +48,11 @@
 #define GSM_UART_NUM UART_NUM_1
 
 #if !defined(LWGSM_USART_DMA_RX_BUFF_SIZE)
-#define LWGSM_USART_DMA_RX_BUFF_SIZE      0x500
+#define LWGSM_USART_DMA_RX_BUFF_SIZE      4096
 #endif /* !defined(LWGSM_USART_DMA_RX_BUFF_SIZE) */
 
 #if !defined(LWGSM_MEM_SIZE)
-#define LWGSM_MEM_SIZE                    0x1024
+#define LWGSM_MEM_SIZE                    4096
 #endif /* !defined(LWGSM_MEM_SIZE) */
 
 static QueueHandle_t gsm_uart_queue;
@@ -73,7 +73,7 @@ send_data(const void* data, size_t len) {
     if (len) {
       len = uart_write_bytes(GSM_UART_NUM, (const char*) data, len);
       //uart_wait_tx_done(GSM_UART_NUM, portMAX_DELAY);
-      ESP_LOG_BUFFER_HEXDUMP(">", data, len, ESP_LOG_DEBUG);
+      ESP_LOG_BUFFER_HEXDUMP(">", (const char*) data, len, ESP_LOG_DEBUG);
     }
     return len;                                 /* Return number of bytes actually sent to AT port */
 }

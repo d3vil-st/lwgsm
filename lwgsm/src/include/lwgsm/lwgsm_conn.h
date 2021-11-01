@@ -47,11 +47,14 @@ extern "C" {
  * \{
  */
 
-lwgsmr_t      lwgsm_conn_start(lwgsm_conn_p* conn, lwgsm_conn_type_t type, const char* const host, lwgsm_port_t port, void* const arg, lwgsm_evt_fn conn_evt_fn, const uint32_t blocking);
+lwgsmr_t      lwgsm_conn_start(lwgsm_conn_p* conn, lwgsm_conn_type_t type, const char* const host, lwgsm_port_t port, const uint8_t auto_receive, void* const arg, lwgsm_evt_fn conn_evt_fn, const uint32_t blocking);
 lwgsmr_t      lwgsm_conn_close(lwgsm_conn_p conn, const uint32_t blocking);
 lwgsmr_t      lwgsm_conn_send(lwgsm_conn_p conn, const void* data, size_t btw, size_t* const bw, const uint32_t blocking);
 lwgsmr_t      lwgsm_conn_sendto(lwgsm_conn_p conn, const lwgsm_ip_t* const ip, lwgsm_port_t port, const void* data, size_t btw, size_t* bw, const uint32_t blocking);
 lwgsmr_t      lwgsm_conn_set_arg(lwgsm_conn_p conn, void* const arg);
+#if LWGSM_CFG_CONN_MANUAL_TCP_RECEIVE
+lwgsmr_t      lwgsm_conn_rxget(lwgsm_conn_p conn, const uint8_t mode, const uint32_t len, const uint32_t blocking);
+#endif /* !LWGSM_CFG_CONN_MANUAL_TCP_RECEIVE */
 void*       lwgsm_conn_get_arg(lwgsm_conn_p conn);
 uint8_t     lwgsm_conn_is_client(lwgsm_conn_p conn);
 uint8_t     lwgsm_conn_is_active(lwgsm_conn_p conn);

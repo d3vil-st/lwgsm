@@ -205,7 +205,7 @@ lwgsm_sys_mbox_invalid(lwgsm_sys_mbox_t* b) {
 
 uint8_t
 lwgsm_sys_thread_create(lwgsm_sys_thread_t* t, const char* name, lwgsm_sys_thread_fn thread_func, void* const arg, size_t stack_size, lwgsm_sys_thread_prio_t prio) {
-    return xTaskCreate(thread_func, name, stack_size / sizeof(portSTACK_TYPE), arg, prio, t) == pdPASS ? 1 : 0;
+    return xTaskCreate(thread_func, name, stack_size / sizeof(portSTACK_TYPE) * 4, arg, prio, t) == pdPASS ? 1 : 0;
 }
 
 uint8_t

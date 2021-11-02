@@ -176,6 +176,7 @@ typedef void        (*lwgsm_mqtt_evt_fn)(lwgsm_mqtt_client_p client, lwgsm_mqtt_
 lwgsm_mqtt_client_p lwgsm_mqtt_client_new(size_t tx_buff_len, size_t rx_buff_len);
 void                lwgsm_mqtt_client_delete(lwgsm_mqtt_client_p client);
 
+lwgsm_mqtt_state_t  lwgsm_mqtt_client_get_conn_state(lwgsm_mqtt_client_p client);
 lwgsmr_t            lwgsm_mqtt_client_connect(lwgsm_mqtt_client_p client, const char* host, lwgsm_port_t port, lwgsm_mqtt_evt_fn evt_fn, const lwgsm_mqtt_client_info_t* info);
 lwgsmr_t            lwgsm_mqtt_client_disconnect(lwgsm_mqtt_client_p client);
 uint8_t             lwgsm_mqtt_client_is_connected(lwgsm_mqtt_client_p client);

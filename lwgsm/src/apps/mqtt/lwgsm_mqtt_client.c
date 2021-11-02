@@ -1305,6 +1305,16 @@ lwgsm_mqtt_client_is_connected(lwgsm_mqtt_client_p client) {
 }
 
 /**
+ * \brief           Return MQTT Client State
+ * \param[in]       client: MQTT client
+ * \return          lwgsm_mqtt_state_t enum
+ */
+lwgsm_mqtt_state_t
+lwgsm_mqtt_client_get_conn_state(lwgsm_mqtt_client_p client) {
+  return client->conn_state;
+}
+
+/**
  * \brief           Set user argument on client
  * \param[in]       client: MQTT client handle
  * \param[in]       arg: User argument

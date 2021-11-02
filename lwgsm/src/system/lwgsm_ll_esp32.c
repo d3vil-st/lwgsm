@@ -61,6 +61,8 @@ static uint8_t initialized = 0;
 
 char* uart_buffer[LWGSM_USART_DMA_RX_BUFF_SIZE];
 
+extern uint8_t LWGSM_CFG_RX, LWGSM_CFG_TX;
+
 /**
  * \brief           Send data to GSM device, function called from GSM stack when we have data to send
  * \param[in]       data: Pointer to data to send
@@ -132,7 +134,8 @@ configure_uart(uint32_t baudrate) {
   ESP_ERROR_CHECK(uart_driver_install(GSM_UART_NUM, LWGSM_USART_DMA_RX_BUFF_SIZE,
                                       LWGSM_USART_DMA_RX_BUFF_SIZE, 20, &gsm_uart_queue, 0));
   ESP_ERROR_CHECK(uart_param_config(GSM_UART_NUM, &uart_config));
-  ESP_ERROR_CHECK(uart_set_pin(GSM_UART_NUM, CONFIG_LWGSM_TX, CONFIG_LWGSM_RX, 0, 0));
+  ESP_LOGD(TAG, "RX: %d TX: %d", LWGSM_CFG_RX, LWGSM_CFG_TX);
+  ESP_ERROR_CHECK(uart_set_pin(GSM_UART_NUM, LWGSM_CFG_TX, LWGSM_CFG_RX, 0, 0));
 }
 /**
  * \brief           Callback function called from initialization process

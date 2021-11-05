@@ -802,6 +802,10 @@ mqtt_connected_cb(lwgsm_mqtt_client_p client) {
         flags |= MQTT_FLAG_CONNECT_WILL;
         flags |= LWGSM_MIN(LWGSM_U8(client->info->will_qos), 2) << 0x03;/* Set qos to flags */
 
+        if (client->info->will_retain) {
+            flags |= MQTT_FLAG_CONNECT_WILL_RETAIN;
+        }
+
         len_will_topic = LWGSM_U16(strlen(client->info->will_topic));
         len_will_message = LWGSM_U16(strlen(client->info->will_message));
 

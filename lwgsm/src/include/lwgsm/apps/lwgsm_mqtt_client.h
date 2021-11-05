@@ -90,6 +90,7 @@ typedef struct {
     const char* will_topic;                     /*!< Will topic */
     const char* will_message;                   /*!< Will message */
     lwgsm_mqtt_qos_t will_qos;                  /*!< Will topic quality of service */
+    uint8_t will_retain;                        /*!< Will topic retain flag */
 } lwgsm_mqtt_client_info_t;
 
 /**

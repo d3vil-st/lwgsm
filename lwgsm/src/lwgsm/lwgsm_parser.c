@@ -604,8 +604,31 @@ lwgsmi_parse_clcc(const char* str, uint8_t send_evt) {
     }
     return 1;
 }
-
 #endif /* LWGSM_CFG_CALL || __DOXYGEN__ */
+
+#if LWGSM_CFG_DTMF || __DOXYGEN__
+
+/**
+ * \brief           Parse received +DTMF with key scanned info
+ * \param[in]       str: Input string
+ * \param[in]       send_evt: Send event about new DTMF key
+ * \return          1 on success, 0 otherwise
+ */
+uint8_t
+lwgsmi_parse_dtmf(const char* str, uint8_t send_evt) {
+    if (*str == '+') {
+        str += 7;
+    }
+
+    lwgsmi_parse_string(&str, lwgsm.m.dtmf.key, sizeof(lwgsm.m.dtmf.key), 1);
+
+    if (send_evt) {
+        lwgsm.evt.evt.dtmf_detected.dtmf = &lwgsm.m.dtmf;
+        lwgsmi_send_cb(LWGSM_EVT_DTMF_DETECTED);
+    }
+    return 1;
+}
+#endif /* LWGSM_CFG_DTMF || __DOXYGEN__ */
 
 #if LWGSM_CFG_MQTT || __DOXYGEN__
 

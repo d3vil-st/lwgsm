@@ -760,6 +760,10 @@ lwgsmi_parse_received(lwgsm_recv_t* rcv) {
         } else if (!strncmp(rcv->data, "+CLCC", 5)) {
             lwgsmi_parse_clcc(rcv->data, 1);    /* Parse +CLCC response with call info change */
 #endif /* LWGSM_CFG_CALL */
+#if LWGSM_CFG_DTMF
+        } else if (!strncmp(rcv->data, "+DTMF", 5)) {
+            lwgsmi_parse_dtmf(rcv->data, 1);    /* Parse +DTMF response with key code detected */
+#endif /* LWGSM_CFG_DTMF */
 #if LWGSM_CFG_PHONEBOOK
         } else if (CMD_IS_CUR(LWGSM_CMD_CPBS_GET_OPT) && !strncmp(rcv->data, "+CPBS", 5)) {
             lwgsmi_parse_cpbs(rcv->data, 0);    /* Parse +CPBS response */
@@ -1553,6 +1557,12 @@ lwgsmi_process_sub_cmd(lwgsm_msg_t* msg, uint8_t* is_ok, uint16_t* is_error) {
         lwgsm.evt.evt.call_enable.res = lwgsm.m.call.enabled ? lwgsmOK : lwgsmERR;
         lwgsmi_send_cb(LWGSM_EVT_CALL_ENABLE);  /* Send to user */
 #endif /* LWGSM_CFG_CALL */
+#if LWGSM_CFG_DTMF
+    } else if (CMD_IS_DEF(LWGSM_CMD_DTMF_ENABLE)) {
+        lwgsm.m.dtmf.enabled = *is_ok;          /* Set enabled status */
+        lwgsm.evt.evt.dtmf_enable.res = lwgsm.m.dtmf.enabled ? lwgsmOK : lwgsmERR;
+        lwgsmi_send_cb(LWGSM_EVT_DTMF_ENABLE);  /* Send to user */
+#endif /* LWGSM_CFG_DTMF */
 #if LWGSM_CFG_PHONEBOOK
     } else if (CMD_IS_DEF(LWGSM_CMD_PHONEBOOK_ENABLE)) {
         lwgsm.m.pb.enabled = *is_ok;            /* Set enabled status */
@@ -2151,6 +2161,14 @@ lwgsmi_initiate_cmd(lwgsm_msg_t* msg) {
             break;
         }
 #endif /* LWGSM_CFG_CALL */
+#if LWGSM_CFG_DTMF
+        case LWGSM_CMD_DDET_SET: {              /* Enable DTMF Detection */
+            AT_PORT_SEND_BEGIN_AT();
+            AT_PORT_SEND_CONST_STR("+DDET=1");
+            AT_PORT_SEND_END_AT();
+            break;
+        }
+#endif /* LWGSM_CFG_DTMF */
 #if LWGSM_CFG_PHONEBOOK
         case LWGSM_CMD_CPBS_GET_OPT: {          /* Get available phonebook storages */
             AT_PORT_SEND_BEGIN_AT();

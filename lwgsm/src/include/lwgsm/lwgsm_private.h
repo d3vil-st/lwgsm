@@ -120,6 +120,9 @@ typedef enum {
     LWGSM_CMD_IPR,                              /*!< Set TE-TA Fixed Local Rate */
     LWGSM_CMD_HVOIC,                            /*!< Disconnect Voice Call Only */
 
+    LWGSM_CMD_DTMF_ENABLE,
+    LWGSM_CMD_DDET_SET,
+
     /* AT commands according to 3GPP TS 27.007 */
     LWGSM_CMD_COPS_SET,                         /*!< Set operator */
     LWGSM_CMD_COPS_GET,                         /*!< Get current operator */
@@ -718,6 +721,9 @@ typedef struct {
 #if LWGSM_CFG_CALL || __DOXYGEN__
     lwgsm_call_t          call;                 /*!< Call information */
 #endif /* LWGSM_CFG_CALL || __DOXYGEN__ */
+#if LWGSM_CFG_DTMF || __DOXYGEN__
+    lwgsm_dtmf_t          dtmf;                 /*!< DTMF information */
+#endif /* LWGSM_CFG_DTMF || __DOXYGEN__ */
 #if LWGSM_CFG_MQTT || __DOXYGEN__
     lwgsm_mqtt_message_t  mqtt_message;
     uint8_t               mqtt_state;

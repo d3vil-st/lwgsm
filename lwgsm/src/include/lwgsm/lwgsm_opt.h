@@ -567,6 +567,14 @@
 #endif
 
 /**
+ * \brief           Enables `1` or disables `0` DTMF API.
+ *
+ */
+#ifndef LWGSM_CFG_DTMF
+#define LWGSM_CFG_DTMF                        0
+#endif
+
+/**
  * \brief           Enables `1` or disables `0` phonebook API.
  *
  */

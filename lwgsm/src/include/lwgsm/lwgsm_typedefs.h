@@ -341,6 +341,14 @@ typedef struct {
 } lwgsm_call_t;
 
 typedef struct {
+    uint8_t ready;                                /*!< Flag indicating feature ready by device */
+    uint8_t enabled;                              /*!< Flag indicating feature enabled */
+
+    char key[2];                                  /*!< Scanned key */
+
+} lwgsm_dtmf_t;
+
+typedef struct {
     const char* path;                           /*!< Path to file */
     uint8_t mode;                               /*!< Mode for file */
     uint16_t size;                              /*!< Size of file */
@@ -446,6 +454,11 @@ typedef enum lwgsm_cb_type_t {
     LWGSM_EVT_CALL_BUSY,                        /*!< Call is busy */
     LWGSM_EVT_CALL_NO_CARRIER,                  /*!< No carrier to make a call */
 #endif /* LWGSM_CFG_CALL || __DOXYGEN__ */
+#if LWGSM_CFG_DTMF || __DOXYGEN__
+    LWGSM_EVT_DTMF_ENABLE,                      /*!< DTMF enable event */
+    LWGSM_EVT_DTMF_READY,                       /*!< DTMF ready event */
+    LWGSM_EVT_DTMF_DETECTED,                    /*!< DTMF detected, `+DTMF` statement received */
+#endif /* LWGSM_CFG_DTMF || __DOXYGEN__ */
 #if LWGSM_CFG_PHONEBOOK || __DOXYGEN__
     LWGSM_EVT_PB_ENABLE,                        /*!< Phonebook enable event */
     LWGSM_EVT_PB_LIST,                          /*!< Phonebook list event */
@@ -554,6 +567,14 @@ typedef struct lwgsm_evt {
             const lwgsm_call_t* call;           /*!< Call information */
         } call_changed;                         /*!< Call changed info. Use with \ref LWGSM_EVT_CALL_CHANGED event */
 #endif /* LWGSM_CFG_CALL || __DOXYGEN__ */
+#if LWGSM_CFG_DTMF || __DOXYGEN__
+        struct {
+            lwgsmr_t res;                         /*!< Enable status */
+        } dtmf_enable;                          /*!< DTMF enable event. Use with \ref LWGSM_EVT_DTMF_ENABLE event */
+        struct {
+            const lwgsm_dtmf_t* dtmf;             /*!< DTMF information */
+        } dtmf_detected;                        /*!< DTMF detected info. Use with \ref LWGSM_EVT_DTMF_DETECTED event */
+#endif /* LWGSM_CFG_DTMF || __DOXYGEN__ */
 #if LWGSM_CFG_PHONEBOOK || __DOXYGEN__
         struct {
             lwgsmr_t res;                       /*!< Enable status */

@@ -54,6 +54,9 @@
 #if LWGSM_CFG_CALL || __DOXYGEN__
 #include "lwgsm/lwgsm_call.h"
 #endif /* LWGSM_CFG_CALL || __DOXYGEN__ */
+#if LWGSM_CFG_DTMF || __DOXYGEN__
+#include "lwgsm/lwgsm_dtmf.h"
+#endif /* LWGSM_CFG_DTMF || __DOXYGEN__ */
 #if LWGSM_CFG_PHONEBOOK || __DOXYGEN__
 #include "lwgsm/lwgsm_phonebook.h"
 #endif /* LWGSM_CFG_PHONEBOOK || __DOXYGEN__ */

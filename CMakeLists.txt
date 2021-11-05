@@ -9,6 +9,7 @@ idf_component_register(
     "lwgsm/src/lwgsm/lwgsm_clock.c"
     "lwgsm/src/lwgsm/lwgsm_debug.c"
     "lwgsm/src/lwgsm/lwgsm_device_info.c"
+    "lwgsm/src/lwgsm/lwgsm_dtmf.c"
     "lwgsm/src/lwgsm/lwgsm_evt.c"
     "lwgsm/src/lwgsm/lwgsm_fs.c"
     "lwgsm/src/lwgsm/lwgsm_input.c"

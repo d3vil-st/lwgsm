@@ -76,6 +76,8 @@ uint8_t     lwgsmi_parse_smstate(const char* str);
 uint8_t     lwgsmi_parse_sapbr(const char* str);
 uint8_t     lwgsmi_parse_cclk(const char* str);
 
+uint8_t     lwgsmi_parse_dtmf(const char* str, uint8_t send_evt);
+
 
 #if defined(__cplusplus)
 }

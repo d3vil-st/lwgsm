@@ -1164,7 +1164,7 @@ lwgsmi_parse_rxget(const char* str) {
     case (2):
     case (3):
       len = lwgsmi_parse_number(&str);             /* Parse received length */
-      cnflen = lwgsmi_parse_number(&str);             /* Parse received length */
+      cnflen = lwgsmi_parse_number(&str);             /* Parse cnflen length */
       c->tcp_available_data = cnflen;
       // ESP_LOGW(__func__, "len: %d cnflen: %d", len, cnflen);
       if (len > 0 ) {
@@ -1173,6 +1173,8 @@ lwgsmi_parse_rxget(const char* str) {
           lwgsm.m.ipd.rem_len = len;                  /* Number of remaining bytes to read */
           lwgsm.m.ipd.conn = c;                       /* Pointer to connection we have data for */
       }
+      if (c->auto_receive && cnflen > 0)
+        lwgsm_conn_rxget(c, 2, LWGSM_MIN(c->tcp_available_data, LWGSM_CFG_CONN_MAX_DATA_LEN), 0);
       break;
     case (4):
       cnflen = lwgsmi_parse_number(&str);             /* Parse received length */

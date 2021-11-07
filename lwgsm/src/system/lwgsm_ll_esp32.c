@@ -92,7 +92,7 @@ static void uart_event_task(void *pvParameters)
         case UART_DATA:
           uart_get_buffered_data_len(GSM_UART_NUM, &buffer_len);
           buffer_len = uart_read_bytes(GSM_UART_NUM, (void*) uart_buffer, buffer_len, portMAX_DELAY);
-          ESP_LOG_BUFFER_HEXDUMP("<", uart_buffer, buffer_len, ESP_LOG_DEBUG);
+          // ESP_LOG_BUFFER_HEXDUMP("<", uart_buffer, buffer_len, ESP_LOG_INFO);
           if (buffer_len) {
             #if LWGSM_CFG_INPUT_USE_PROCESS
               lwgsm_input_process(uart_buffer, buffer_len);

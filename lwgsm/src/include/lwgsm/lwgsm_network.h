@@ -54,9 +54,10 @@ lwgsm_network_reg_status_t    lwgsm_network_get_reg_status(void);
 /* TCP/IP related commands */
 lwgsmr_t      lwgsm_network_attach(const char* apn, const char* user, const char* pass, const lwgsm_api_cmd_evt_fn evt_fn, void* const evt_arg, const uint32_t blocking);
 lwgsmr_t      lwgsm_network_detach(const lwgsm_api_cmd_evt_fn evt_fn, void* const evt_arg, const uint32_t blocking);
-uint8_t     lwgsm_network_is_attached(void);
+uint8_t       lwgsm_network_is_attached(void);
 lwgsmr_t      lwgsm_network_copy_ip(lwgsm_ip_t* ip);
 lwgsmr_t      lwgsm_network_check_status(const lwgsm_api_cmd_evt_fn evt_fn, void* const evt_arg, const uint32_t blocking);
+uint32_t      lwgsm_network_get_network_counter(void);
 
 /**
  * \}

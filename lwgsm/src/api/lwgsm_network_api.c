@@ -130,4 +130,9 @@ lwgsm_network_request_detach(void) {
     return res;
 }
 
+uint32_t
+lwgsm_network_get_network_counter(void) {
+  return network_counter;
+}
+
 #endif /* LWGSM_CFG_NETWORK || __DOXYGEN__ */

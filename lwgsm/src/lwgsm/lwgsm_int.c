@@ -1841,6 +1841,12 @@ lwgsmi_initiate_cmd(lwgsm_msg_t* msg) {
             AT_PORT_SEND_END_AT();
             break;
         }
+        case LWGSM_CMD_AT_W: {              /* Store active profile into NVRAM */
+            AT_PORT_SEND_BEGIN_AT();
+            AT_PORT_SEND_CONST_STR("&W");
+            AT_PORT_SEND_END_AT();
+            break;
+        }
         case LWGSM_CMD_CFUN_SET: {
             AT_PORT_SEND_BEGIN_AT();
             AT_PORT_SEND_CONST_STR("+CFUN=");

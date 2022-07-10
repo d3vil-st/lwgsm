@@ -280,6 +280,21 @@ lwgsm_delay(uint32_t ms) {
 }
 
 /**
+ * \brief           Store active profile into NVRAM
+ *
+ * \param[in]       blocking: Status whether command should be blocking or not.
+ */
+lwgsmr_t
+lwgsm_store_profile(const uint32_t blocking) {
+    LWGSM_MSG_VAR_DEFINE(msg);
+
+    LWGSM_MSG_VAR_ALLOC(msg, blocking);
+    LWGSM_MSG_VAR_REF(msg).cmd_def = LWGSM_CMD_AT_W;
+
+    return lwgsmi_send_msg_to_producer_mbox(&LWGSM_MSG_VAR_REF(msg), lwgsmi_initiate_cmd, 60000);
+}
+
+/**
  * \brief           Set modem function mode
  * \note            Use this function to set modem to normal or low-power mode
  * \param[in]       mode: Mode status. Set to `1` for full functionality or `0` for low-power mode (no functionality)

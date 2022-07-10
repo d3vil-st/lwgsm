@@ -61,6 +61,8 @@ uint8_t     lwgsm_device_is_present(void);
 
 uint8_t     lwgsm_delay(uint32_t ms);
 
+lwgsmr_t    lwgsm_store_profile(const uint32_t blocking);
+
 /**
  * \}
  */

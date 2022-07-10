@@ -1155,7 +1155,7 @@ lwgsm_mqtt_client_connect(lwgsm_mqtt_client_p client, const char* host, lwgsm_po
         client->evt_fn = evt_fn != NULL ? evt_fn : prv_mqtt_evt_fn_default;
 
         /* Start a new connection in non-blocking mode */
-        if ((res = lwgsm_conn_start(&client->conn, LWGSM_CONN_TYPE_SSL, host, port, client, prv_mqtt_conn_cb, 0)) == lwgsmOK) {
+        if ((res = lwgsm_conn_start(&client->conn, LWGSM_CONN_TYPE_SSL, host, port, 1, client, prv_mqtt_conn_cb, 0)) == lwgsmOK) {
             client->conn_state = LWGSM_MQTT_CONN_CONNECTING;
         }
     }

@@ -189,6 +189,7 @@ typedef enum {
     LWGSM_CMD_COPN,                             /*!< Read Operator Names */
     LWGSM_CMD_CCLK,                             /*!< Clock */
     LWGSM_CMD_CLTS,                             /*!< Set sync clock with base station */
+    LWGSM_CMD_CSCLK,
     LWGSM_CMD_CSIM,                             /*!< Generic SIM Access */
     LWGSM_CMD_CALM,                             /*!< Alert Sound Mode */
     LWGSM_CMD_CALS,                             /*!< Alert Sound Select */
@@ -592,6 +593,9 @@ typedef struct lwgsm_msg {
             lwgsm_datetime_t* datetime;
         } clock;
 #endif /* LWGSM_CFG_CLOCK || __DOXYGEN__ */
+        struct {
+            uint8_t mode;
+        } sleep;
     } msg;                                      /*!< Group of different possible message contents */
 } lwgsm_msg_t;
 

@@ -2448,6 +2448,13 @@ lwgsmi_initiate_cmd(lwgsm_msg_t* msg) {
             break;
         }
 #endif
+        case LWGSM_CMD_CSCLK: {                   /* Request current time */
+          AT_PORT_SEND_BEGIN_AT();
+          AT_PORT_SEND_CONST_STR("+CSCLK=");
+          lwgsmi_send_number(msg->msg.sleep.mode, 0, 0);
+          AT_PORT_SEND_END_AT();
+          break;
+        }
         default:
             return lwgsmERR;                    /* Invalid command */
     }

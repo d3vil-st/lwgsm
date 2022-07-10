@@ -24,6 +24,7 @@ idf_component_register(
     "lwgsm/src/lwgsm/lwgsm_phonebook.c"
     "lwgsm/src/lwgsm/lwgsm_ping.c"
     "lwgsm/src/lwgsm/lwgsm_sim.c"
+    "lwgsm/src/lwgsm/lwgsm_sleep.c"
     "lwgsm/src/lwgsm/lwgsm_sms.c"
     "lwgsm/src/lwgsm/lwgsm_ssl.c"
     "lwgsm/src/lwgsm/lwgsm_threads.c"

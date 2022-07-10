@@ -4,7 +4,7 @@
  */
 
 /*
- * Copyright (c) 2020 Tilen MAJERLE
+ * Copyright (c) 2022 Tilen MAJERLE
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -29,7 +29,7 @@
  * This file is part of LwGSM - Lightweight GSM-AT library.
  *
  * Author:          Tilen MAJERLE <tilen@majerle.eu>
- * Version:         v0.1.0
+ * Version:         v0.1.1
  */
 #include "system/lwgsm_ll.h"
 #include "lwgsm/lwgsm.h"
@@ -78,7 +78,7 @@ send_data(const void* data, size_t len) {
 /**
  * \brief           Configure UART (USB to UART)
  */
-static void
+static uint8_t
 configure_uart(uint32_t baudrate) {
     DCB dcb = { 0 };
     dcb.DCBlength = sizeof(dcb);
@@ -89,22 +89,15 @@ configure_uart(uint32_t baudrate) {
      * as generic read and write
      */
     if (!initialized) {
-        static const LPCWSTR com_ports[] = {
-            L"\\\\.\\COM23",
-            L"\\\\.\\COM12",
-            L"\\\\.\\COM9",
-            L"\\\\.\\COM8",
-            L"\\\\.\\COM4"
+        static const char* com_ports[] = {
+            "\\\\.\\COM23",
+            "\\\\.\\COM12",
+            "\\\\.\\COM9",
+            "\\\\.\\COM8",
+            "\\\\.\\COM4"
         };
         for (size_t i = 0; i < sizeof(com_ports) / sizeof(com_ports[0]); ++i) {
-            com_port = CreateFile(com_ports[i],
-                                  GENERIC_READ | GENERIC_WRITE,
-                                  0,
-                                  0,
-                                  OPEN_EXISTING,
-                                  0,
-                                  NULL
-                                 );
+            com_port = CreateFileA(com_ports[i], GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, 0, NULL);
             if (GetCommState(com_port, &dcb)) {
                 printf("COM PORT %s opened!\r\n", (const char*)com_ports[i]);
                 break;
@@ -123,6 +116,7 @@ configure_uart(uint32_t baudrate) {
 
         if (!SetCommState(com_port, &dcb)) {
             printf("Cannot set COM PORT info\r\n");
+            return 0;
         }
         if (GetCommTimeouts(com_port, &timeouts)) {
             /* Set timeout to return immediately from ReadFile function */
@@ -135,15 +129,18 @@ configure_uart(uint32_t baudrate) {
             GetCommTimeouts(com_port, &timeouts);
         } else {
             printf("Cannot get COM PORT timeouts\r\n");
+            return 0;
         }
     } else {
         printf("Cannot get COM PORT info\r\n");
+        return 0;
     }
 
     /* On first function call, create a thread to read data from COM port */
     if (!initialized) {
-        thread_handle = CreateThread(0, 0, (LPTHREAD_START_ROUTINE)uart_thread, NULL, 0, 0);
+        lwgsm_sys_thread_create(&thread_handle, "lwgsm_ll_thread", uart_thread, NULL, 0, 0);
     }
+    return 1;
 }
 
 /**
@@ -235,7 +232,9 @@ lwgsm_ll_init(lwgsm_ll_t* ll) {
     }
 
     /* Step 3: Configure AT port to be able to send/receive data to/from GSM device */
-    configure_uart(ll->uart.baudrate);          /* Initialize UART for communication */
+    if (!configure_uart(ll->uart.baudrate)) {   /* Initialize UART for communication */
+        return lwgsmERR;
+    }
     initialized = 1;
     return lwgsmOK;
 }

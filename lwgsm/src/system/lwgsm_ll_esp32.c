@@ -30,7 +30,7 @@
  *
  * Authors:          Tilen MAJERLE <tilen@majerle.eu>,
  *                   Ilya Kargapolov <d3vil.st@gmail.com>
- * Version:         v0.1.0
+ * Version:         v0.1.1
  */
 #include "system/lwgsm_ll.h"
 #include "lwgsm/lwgsm.h"
@@ -80,62 +80,62 @@ send_data(const void* data, size_t len) {
     return len;                                 /* Return number of bytes actually sent to AT port */
 }
 
-static void uart_event_task(void *pvParameters)
-{
-  uart_event_t event;
-  size_t buffer_len;
+static void
+uart_event_task(void* pvParameters) {
+    uart_event_t event;
+    size_t buffer_len;
 
-  for(;;) {
-    //Waiting for UART event.
-    if(xQueueReceive(gsm_uart_queue, (void * )&event, (portTickType)portMAX_DELAY)) {
-      switch(event.type) {
-        case UART_DATA:
-          uart_get_buffered_data_len(GSM_UART_NUM, &buffer_len);
-          buffer_len = uart_read_bytes(GSM_UART_NUM, (void*) uart_buffer, buffer_len, portMAX_DELAY);
-          // ESP_LOG_BUFFER_HEXDUMP("<", uart_buffer, buffer_len, ESP_LOG_INFO);
-          if (buffer_len) {
-            #if LWGSM_CFG_INPUT_USE_PROCESS
-              lwgsm_input_process(uart_buffer, buffer_len);
-            #else
-              lwgsm_input(uart_buffer, buffer_len);
-            #endif
-          }
-          break;
-        case UART_FIFO_OVF:
-          ESP_LOGW(TAG, "UART_FIFO_OVF");
-          uart_flush_input(GSM_UART_NUM);
-          xQueueReset(gsm_uart_queue);
-          break;
-        case UART_BUFFER_FULL:
-          ESP_LOGW(TAG, "UART_BUFFER_FULL");
-          uart_flush_input(GSM_UART_NUM);
-          xQueueReset(gsm_uart_queue);
-          break;
-        default:
-          break;
-      }
+    for (;;) {
+        //Waiting for UART event.
+        if (xQueueReceive(gsm_uart_queue, (void* )&event, (portTickType)portMAX_DELAY)) {
+            switch (event.type) {
+                case UART_DATA:
+                    uart_get_buffered_data_len(GSM_UART_NUM, &buffer_len);
+                    buffer_len = uart_read_bytes(GSM_UART_NUM, (void*) uart_buffer, buffer_len, portMAX_DELAY);
+                    ESP_LOG_BUFFER_HEXDUMP("<", uart_buffer, buffer_len, ESP_LOG_DEBUG);
+                    if (buffer_len) {
+#if LWGSM_CFG_INPUT_USE_PROCESS
+                        lwgsm_input_process(uart_buffer, buffer_len);
+#else
+                        lwgsm_input(uart_buffer, buffer_len);
+#endif
+                    }
+                    break;
+                case UART_FIFO_OVF:
+                    ESP_LOGW(TAG, "UART_FIFO_OVF");
+                    uart_flush_input(GSM_UART_NUM);
+                    xQueueReset(gsm_uart_queue);
+                    break;
+                case UART_BUFFER_FULL:
+                    ESP_LOGW(TAG, "UART_BUFFER_FULL");
+                    uart_flush_input(GSM_UART_NUM);
+                    xQueueReset(gsm_uart_queue);
+                    break;
+                default:
+                    break;
+            }
+        }
     }
-  }
-  vTaskDelete(NULL);
+    vTaskDelete(NULL);
 }
 /**
  * \brief           Configure UART using DMA for receive in double buffer mode and IDLE line detection
  */
 static void
 configure_uart(uint32_t baudrate) {
-  uart_config_t uart_config = {
-    .baud_rate = baudrate,
-    .data_bits = UART_DATA_8_BITS,
-    .parity = UART_PARITY_DISABLE,
-    .stop_bits = UART_STOP_BITS_1,
-    .source_clk = UART_SCLK_REF_TICK,
-    .flow_ctrl = UART_HW_FLOWCTRL_DISABLE
-  };
-  ESP_ERROR_CHECK(uart_driver_install(GSM_UART_NUM, LWGSM_USART_DMA_RX_BUFF_SIZE,
-                                      LWGSM_USART_DMA_RX_BUFF_SIZE, 20, &gsm_uart_queue, 0));
-  ESP_ERROR_CHECK(uart_param_config(GSM_UART_NUM, &uart_config));
-  ESP_LOGD(TAG, "RX: %d TX: %d", *LWGSM_CFG_RX, *LWGSM_CFG_TX);
-  ESP_ERROR_CHECK(uart_set_pin(GSM_UART_NUM, *LWGSM_CFG_TX, *LWGSM_CFG_RX, 0, 0));
+    uart_config_t uart_config = {
+        .baud_rate = baudrate,
+        .data_bits = UART_DATA_8_BITS,
+        .parity = UART_PARITY_DISABLE,
+        .stop_bits = UART_STOP_BITS_1,
+        .source_clk = UART_SCLK_REF_TICK,
+        .flow_ctrl = UART_HW_FLOWCTRL_DISABLE
+    };
+    ESP_ERROR_CHECK(uart_driver_install(GSM_UART_NUM, LWGSM_USART_DMA_RX_BUFF_SIZE * 2,
+                                        LWGSM_USART_DMA_RX_BUFF_SIZE * 2, 20, &gsm_uart_queue, 0));
+    ESP_ERROR_CHECK(uart_param_config(GSM_UART_NUM, &uart_config));
+    ESP_LOGD(TAG, "RX: %d TX: %d", *LWGSM_CFG_RX, *LWGSM_CFG_TX);
+    ESP_ERROR_CHECK(uart_set_pin(GSM_UART_NUM, *LWGSM_CFG_TX, *LWGSM_CFG_RX, 0, 0));
 }
 /**
  * \brief           Callback function called from initialization process

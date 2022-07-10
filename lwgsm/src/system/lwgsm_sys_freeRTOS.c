@@ -28,7 +28,7 @@
  *
  * Authors:         Tilen MAJERLE <tilen@majerle.eu>,
  *                  Ilya Kargapolov <d3vil.st@gmail.com>
- * Version:         v0.1.0
+ * Version:         v0.1.1
  */
 #include "system/lwgsm_sys.h"
 #include "freertos/FreeRTOS.h"
@@ -117,7 +117,7 @@ lwgsm_sys_sem_delete(lwgsm_sys_sem_t* p) {
 uint32_t
 lwgsm_sys_sem_wait(lwgsm_sys_sem_t* p, uint32_t timeout) {
     uint32_t t = xTaskGetTickCount();
-    return xSemaphoreTake(*p, !timeout ? portMAX_DELAY : pdMS_TO_TICKS(timeout)) == pdPASS ? ((xTaskGetTickCount() - t) * portTICK_PERIOD_MS): LWGSM_SYS_TIMEOUT;
+    return xSemaphoreTake(*p, !timeout ? portMAX_DELAY : pdMS_TO_TICKS(timeout)) == pdPASS ? ((xTaskGetTickCount() - t) * portTICK_PERIOD_MS) : LWGSM_SYS_TIMEOUT;
 }
 
 uint8_t

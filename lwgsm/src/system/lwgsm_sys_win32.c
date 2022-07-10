@@ -4,7 +4,7 @@
  */
 
 /*
- * Copyright (c) 2020 Tilen MAJERLE
+ * Copyright (c) 2022 Tilen MAJERLE
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -29,7 +29,7 @@
  * This file is part of LwGSM - Lightweight GSM-AT library.
  *
  * Author:          Tilen MAJERLE <tilen@majerle.eu>
- * Version:         v0.1.0
+ * Version:         v0.1.1
  */
 #include <string.h>
 #include <stdlib.h>
@@ -333,14 +333,12 @@ lwgsm_sys_thread_create(lwgsm_sys_thread_t* t, const char* name, lwgsm_sys_threa
 
 uint8_t
 lwgsm_sys_thread_terminate(lwgsm_sys_thread_t* t) {
-    HANDLE h = NULL;
-
     if (t == NULL) {                            /* Shall we terminate ourself? */
-        h = GetCurrentThread();                 /* Get current thread handle */
-    } else {                                    /* We have known thread, find handle by looking at ID */
-        h = *t;
+        ExitThread(0);
+    } else {
+        /* We have known thread, find handle by looking at ID */
+        TerminateThread(*t, 0);
     }
-    TerminateThread(h, 0);
     return 1;
 }
 

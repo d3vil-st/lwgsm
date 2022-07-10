@@ -4,7 +4,7 @@
  */
 
 /*
- * Copyright (c) 2020 Tilen MAJERLE
+ * Copyright (c) 2022 Tilen MAJERLE
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -29,7 +29,7 @@
  * This file is part of LwGSM - Lightweight GSM-AT library.
  *
  * Author:          Tilen MAJERLE <tilen@majerle.eu>
- * Version:         v0.1.0
+ * Version:         v0.1.1
  */
 #include "system/lwgsm_sys.h"
 #include "cmsis_os.h"
@@ -46,7 +46,7 @@ lwgsm_sys_init(void) {
 
 uint32_t
 lwgsm_sys_now(void) {
-    return osKernelSysTick();
+    return osKernelGetTickCount();
 }
 
 uint8_t

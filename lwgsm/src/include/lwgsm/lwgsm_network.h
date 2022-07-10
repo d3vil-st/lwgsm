@@ -4,7 +4,7 @@
  */
 
 /*
- * Copyright (c) 2020 Tilen MAJERLE
+ * Copyright (c) 2022 Tilen MAJERLE
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -29,7 +29,7 @@
  * This file is part of LwGSM - Lightweight GSM-AT library.
  *
  * Author:          Tilen MAJERLE <tilen@majerle.eu>
- * Version:         v0.1.0
+ * Version:         v0.1.1
  */
 #ifndef LWGSM_HDR_NETWORK_H
 #define LWGSM_HDR_NETWORK_H
@@ -48,16 +48,17 @@ extern "C" {
  */
 
 /* Basic commands, always available */
-lwgsmr_t      lwgsm_network_rssi(int16_t* rssi, const lwgsm_api_cmd_evt_fn evt_fn, void* const evt_arg, const uint32_t blocking);
-lwgsm_network_reg_status_t    lwgsm_network_get_reg_status(void);
+lwgsmr_t    lwgsm_network_rssi(int16_t* rssi, const lwgsm_api_cmd_evt_fn evt_fn, void* const evt_arg, const uint32_t blocking);
+lwgsm_network_reg_status_t  lwgsm_network_get_reg_status(void);
 
 /* TCP/IP related commands */
-lwgsmr_t      lwgsm_network_attach(const char* apn, const char* user, const char* pass, const lwgsm_api_cmd_evt_fn evt_fn, void* const evt_arg, const uint32_t blocking);
-lwgsmr_t      lwgsm_network_detach(const lwgsm_api_cmd_evt_fn evt_fn, void* const evt_arg, const uint32_t blocking);
-uint8_t       lwgsm_network_is_attached(void);
-lwgsmr_t      lwgsm_network_copy_ip(lwgsm_ip_t* ip);
-lwgsmr_t      lwgsm_network_check_status(const lwgsm_api_cmd_evt_fn evt_fn, void* const evt_arg, const uint32_t blocking);
-uint32_t      lwgsm_network_get_network_counter(void);
+lwgsmr_t    lwgsm_network_attach(const char* apn, const char* user, const char* pass, const lwgsm_api_cmd_evt_fn evt_fn, void* const evt_arg, const uint32_t blocking);
+lwgsmr_t    lwgsm_network_detach(const lwgsm_api_cmd_evt_fn evt_fn, void* const evt_arg, const uint32_t blocking);
+uint8_t     lwgsm_network_is_attached(void);
+lwgsmr_t    lwgsm_network_copy_ip(lwgsm_ip_t* ip);
+lwgsmr_t    lwgsm_network_check_status(const lwgsm_api_cmd_evt_fn evt_fn, void* const evt_arg, const uint32_t blocking);
+uint32_t    lwgsm_network_get_network_counter(void);
+
 
 /**
  * \}

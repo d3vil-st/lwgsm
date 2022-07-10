@@ -4,7 +4,7 @@
  */
 
 /*
- * Copyright (c) 2020 Tilen MAJERLE
+ * Copyright (c) 2022 Tilen MAJERLE
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -29,7 +29,7 @@
  * This file is part of LwGSM - Lightweight GSM-AT library.
  *
  * Author:          Tilen MAJERLE <tilen@majerle.eu>
- * Version:         v0.1.0
+ * Version:         v0.1.1
  */
 #include "lwgsm/lwgsm_private.h"
 #include "lwgsm/lwgsm_threads.h"
@@ -117,11 +117,11 @@ lwgsm_thread_produce(void* const arg) {
             }
 
             LWGSM_DEBUGW(LWGSM_CFG_DBG_THREAD | LWGSM_DBG_TYPE_TRACE | LWGSM_DBG_LVL_SEVERE,
-                       res == lwgsmTIMEOUT,
-                       "[THREAD] Timeout in produce thread waiting for command to finish in process thread\r\n");
+                         res == lwgsmTIMEOUT,
+                         "[LWGSM THREAD] Timeout in produce thread waiting for command to finish in process thread\r\n");
             LWGSM_DEBUGW(LWGSM_CFG_DBG_THREAD | LWGSM_DBG_TYPE_TRACE | LWGSM_DBG_LVL_SEVERE,
-                       res != lwgsmOK && res != lwgsmTIMEOUT,
-                       "[THREAD] Could not start execution for command %d\r\n", (int)msg->cmd);
+                         res != lwgsmOK && res != lwgsmTIMEOUT,
+                         "[LWGSM THREAD] Could not start execution for command %d\r\n", (int)msg->cmd);
 
             /*
              * Manually release semaphore in all cases:

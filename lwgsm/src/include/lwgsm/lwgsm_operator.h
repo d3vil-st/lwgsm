@@ -4,7 +4,7 @@
  */
 
 /*
- * Copyright (c) 2020 Tilen MAJERLE
+ * Copyright (c) 2022 Tilen MAJERLE
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -29,7 +29,7 @@
  * This file is part of LwGSM - Lightweight GSM-AT library.
  *
  * Author:          Tilen MAJERLE <tilen@majerle.eu>
- * Version:         v0.1.0
+ * Version:         v0.1.1
  */
 #ifndef LWGSM_HDR_OPERATOR_H
 #define LWGSM_HDR_OPERATOR_H
@@ -48,7 +48,8 @@ extern "C" {
  */
 
 lwgsmr_t      lwgsm_operator_get(lwgsm_operator_curr_t* curr, const lwgsm_api_cmd_evt_fn evt_fn, void* const evt_arg, const uint32_t blocking);
-lwgsmr_t      lwgsm_operator_set(lwgsm_operator_mode_t mode, lwgsm_operator_format_t format, const char* name, uint32_t num, const lwgsm_api_cmd_evt_fn evt_fn, void* const evt_arg, const uint32_t blocking);
+lwgsmr_t      lwgsm_operator_set(lwgsm_operator_mode_t mode, lwgsm_operator_format_t format, const char* name, uint32_t num, const lwgsm_api_cmd_evt_fn evt_fn, void* const evt_arg,
+                                 const uint32_t blocking);
 
 lwgsmr_t      lwgsm_operator_scan(lwgsm_operator_t* ops, size_t opsl, size_t* opf, const lwgsm_api_cmd_evt_fn evt_fn, void* const evt_arg, const uint32_t blocking);
 

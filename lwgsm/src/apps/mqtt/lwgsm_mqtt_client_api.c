@@ -4,7 +4,7 @@
  */
 
 /*
- * Copyright (c) 2020 Tilen MAJERLE
+ * Copyright (c) 2022 Tilen MAJERLE
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -29,7 +29,7 @@
  * This file is part of LwGSM - Lightweight GSM-AT library.
  *
  * Author:          Tilen MAJERLE <tilen@majerle.eu>
- * Version:         v0.1.0
+ * Version:         v0.1.1
  */
 #include "lwgsm/apps/lwgsm_mqtt_client_api.h"
 #include "lwgsm/lwgsm_mem.h"
@@ -65,7 +65,7 @@ mqtt_closed = 0xFF;
  * \param[in]       client: Client handle
  */
 static void
-release_sem(lwgsm_mqtt_client_api_p client) {
+prv_release_sem(lwgsm_mqtt_client_api_p client) {
     if (client->release_sem) {
         client->release_sem = 0;
         lwgsm_sys_sem_release(&client->sync_sem);
@@ -76,7 +76,7 @@ release_sem(lwgsm_mqtt_client_api_p client) {
  * \brief           MQTT event callback function
  */
 static void
-mqtt_evt(lwgsm_mqtt_client_p client, lwgsm_mqtt_evt_t* evt) {
+prv_mqtt_evt(lwgsm_mqtt_client_p client, lwgsm_mqtt_evt_t* evt) {
     lwgsm_mqtt_client_api_p api_client = lwgsm_mqtt_client_get_arg(client);
     if (api_client == NULL) {
         return;
@@ -86,7 +86,7 @@ mqtt_evt(lwgsm_mqtt_client_p client, lwgsm_mqtt_evt_t* evt) {
             lwgsm_mqtt_conn_status_t status = lwgsm_mqtt_client_evt_connect_get_status(client, evt);
 
             LWGSM_DEBUGF(LWGSM_CFG_DBG_MQTT_API_TRACE,
-                       "[MQTT API] Connect event with status: %d\r\n", (int)status);
+                         "[MQTT API] Connect event with status: %d\r\n", (int)status);
 
             api_client->connect_resp = status;
 
@@ -101,92 +101,82 @@ mqtt_evt(lwgsm_mqtt_client_p client, lwgsm_mqtt_evt_t* evt) {
              */
             if (status == LWGSM_MQTT_CONN_STATUS_TCP_FAILED
                 || status == LWGSM_MQTT_CONN_STATUS_ACCEPTED) {
-                release_sem(api_client);        /* Release semaphore */
+                prv_release_sem(api_client);        /* Release semaphore */
             }
 
             break;
         }
         case LWGSM_MQTT_EVT_PUBLISH_RECV: {
             /* Check valid receive mbox */
-            if (lwgsm_sys_mbox_isvalid(&api_client->rcv_mbox)) {
-                lwgsm_mqtt_client_api_buf_p buf;
-                size_t size, buf_size, topic_size, payload_size;
+            if (!lwgsm_sys_mbox_isvalid(&api_client->rcv_mbox)) {
+                break;
+            }
+            lwgsm_mqtt_client_api_buf_p buf;
+            size_t size, buf_size, topic_size, payload_size;
 
-                /* Get event data */
-                const char* topic = lwgsm_mqtt_client_evt_publish_recv_get_topic(client, evt);
-                size_t topic_len = lwgsm_mqtt_client_evt_publish_recv_get_topic_len(client, evt);
-                const uint8_t* payload = lwgsm_mqtt_client_evt_publish_recv_get_payload(client, evt);
-                size_t payload_len = lwgsm_mqtt_client_evt_publish_recv_get_payload_len(client, evt);
-                lwgsm_mqtt_qos_t qos = lwgsm_mqtt_client_evt_publish_recv_get_qos(client, evt);
+            /* Get event data */
+            const char* topic = lwgsm_mqtt_client_evt_publish_recv_get_topic(client, evt);
+            size_t topic_len = lwgsm_mqtt_client_evt_publish_recv_get_topic_len(client, evt);
+            const uint8_t* payload = lwgsm_mqtt_client_evt_publish_recv_get_payload(client, evt);
+            size_t payload_len = lwgsm_mqtt_client_evt_publish_recv_get_payload_len(client, evt);
+            lwgsm_mqtt_qos_t qos = lwgsm_mqtt_client_evt_publish_recv_get_qos(client, evt);
 
-                /* Print debug message */
-                LWGSM_DEBUGF(LWGSM_CFG_DBG_MQTT_API_TRACE,
-                           "[MQTT API] New publish received on topic %.*s\r\n", (int)topic_len, topic);
+            /* Print debug message */
+            LWGSM_DEBUGF(LWGSM_CFG_DBG_MQTT_API_TRACE,
+                         "[MQTT API] New publish received on topic %.*s\r\n", (int)topic_len, topic);
 
-                /* Calculate memory sizes */
-                buf_size = LWGSM_MEM_ALIGN(sizeof(*buf));
-                topic_size = LWGSM_MEM_ALIGN(sizeof(*topic) * (topic_len + 1));
-                payload_size = LWGSM_MEM_ALIGN(sizeof(*payload) * (payload_len + 1));
+            /* Calculate memory sizes */
+            buf_size = LWGSM_MEM_ALIGN(sizeof(*buf));
+            topic_size = LWGSM_MEM_ALIGN(sizeof(*topic) * (topic_len + 1));
+            payload_size = LWGSM_MEM_ALIGN(sizeof(*payload) * (payload_len + 1));
 
-                size = buf_size + topic_size + payload_size;
-                buf = lwgsm_mem_malloc(size);
-                if (buf != NULL) {
-                    LWGSM_MEMSET(buf, 0x00, size);
-                    buf->topic = (void*)((uint8_t*)buf + buf_size);
-                    buf->payload = (void*)((uint8_t*)buf + buf_size + topic_size);
-                    buf->topic_len = topic_len;
-                    buf->payload_len = payload_len;
-                    buf->qos = qos;
+            size = buf_size + topic_size + payload_size;
+            if ((buf = lwgsm_mem_malloc(size)) != NULL) {
+                LWGSM_MEMSET(buf, 0x00, size);
+                buf->topic = (void*)((uint8_t*)buf + buf_size);
+                buf->payload = (void*)((uint8_t*)buf + buf_size + topic_size);
+                buf->topic_len = topic_len;
+                buf->payload_len = payload_len;
+                buf->qos = qos;
 
-                    /* Copy content to new memory */
-                    LWGSM_MEMCPY(buf->topic, topic, sizeof(*topic) * topic_len);
-                    LWGSM_MEMCPY(buf->payload, payload, sizeof(*payload) * payload_len);
+                /* Copy content to new memory */
+                LWGSM_MEMCPY(buf->topic, topic, sizeof(*topic) * topic_len);
+                LWGSM_MEMCPY(buf->payload, payload, sizeof(*payload) * payload_len);
 
-                    /* Write to receive queue */
-                    if (!lwgsm_sys_mbox_putnow(&api_client->rcv_mbox, buf)) {
-                        LWGSM_DEBUGF(LWGSM_CFG_DBG_MQTT_API_TRACE_WARNING,
-                                   "[MQTT API] Cannot put new received MQTT publish to queue\r\n");
-                        lwgsm_mem_free_s((void**)&buf);
-                    }
-                } else {
+                /* Write to receive queue */
+                if (!lwgsm_sys_mbox_putnow(&api_client->rcv_mbox, buf)) {
                     LWGSM_DEBUGF(LWGSM_CFG_DBG_MQTT_API_TRACE_WARNING,
-                               "[MQTT API] Cannot allocate memory for packet buffer of size %d bytes\r\n",
-                               (int)size);
+                                 "[MQTT API] Cannot put new received MQTT publish to queue\r\n");
+                    lwgsm_mem_free_s((void**)&buf);
                 }
+            } else {
+                LWGSM_DEBUGF(LWGSM_CFG_DBG_MQTT_API_TRACE_WARNING,
+                             "[MQTT API] Cannot allocate memory for packet buffer of size %d bytes\r\n", (int)size);
             }
             break;
         }
         case LWGSM_MQTT_EVT_PUBLISH: {
             api_client->sub_pub_resp = lwgsm_mqtt_client_evt_publish_get_result(client, evt);
-
-            /* Print debug message */
+            prv_release_sem(api_client);        /* Release semaphore */
             LWGSM_DEBUGF(LWGSM_CFG_DBG_MQTT_API_TRACE,
-                       "[MQTT API] Publish event with response: %d\r\n",
-                       (int)api_client->sub_pub_resp);
-
-            release_sem(api_client);            /* Release semaphore */
+                         "[MQTT API] Publish event with response: %d\r\n",
+                         (int)api_client->sub_pub_resp);
             break;
         }
         case LWGSM_MQTT_EVT_SUBSCRIBE: {
             api_client->sub_pub_resp = lwgsm_mqtt_client_evt_subscribe_get_result(client, evt);
-
-            /* Print debug message */
+            prv_release_sem(api_client);        /* Release semaphore */
             LWGSM_DEBUGF(LWGSM_CFG_DBG_MQTT_API_TRACE,
-                       "[MQTT API] Subscribe event with response: %d\r\n",
-                       (int)api_client->sub_pub_resp);
-
-            release_sem(api_client);            /* Release semaphore */
+                         "[MQTT API] Subscribe event with response: %d\r\n",
+                         (int)api_client->sub_pub_resp);
             break;
         }
         case LWGSM_MQTT_EVT_UNSUBSCRIBE: {
             api_client->sub_pub_resp = lwgsm_mqtt_client_evt_unsubscribe_get_result(client, evt);
-
-            /* Print debug message */
+            prv_release_sem(api_client);        /* Release semaphore */
             LWGSM_DEBUGF(LWGSM_CFG_DBG_MQTT_API_TRACE,
-                       "[MQTT API] Unsubscribe event with response: %d\r\n",
-                       (int)api_client->sub_pub_resp);
-
-            release_sem(api_client);            /* Release semaphore */
+                         "[MQTT API] Unsubscribe event with response: %d\r\n",
+                         (int)api_client->sub_pub_resp);
             break;
         }
         case LWGSM_MQTT_EVT_DISCONNECT: {
@@ -196,14 +186,13 @@ mqtt_evt(lwgsm_mqtt_client_p client, lwgsm_mqtt_evt_t* evt) {
 
             /* Print debug message */
             LWGSM_DEBUGF(LWGSM_CFG_DBG_MQTT_API_TRACE,
-                       "[MQTT API] Disconnect event\r\n");
+                         "[MQTT API] Disconnect event\r\n");
 
             /* Write to receive mbox to wakeup receive thread */
             if (is_accepted && lwgsm_sys_mbox_isvalid(&api_client->rcv_mbox)) {
                 lwgsm_sys_mbox_putnow(&api_client->rcv_mbox, &mqtt_closed);
             }
-
-            release_sem(api_client);            /* Release semaphore */
+            prv_release_sem(api_client);        /* Release semaphore */
             break;
         }
         default:
@@ -222,19 +211,13 @@ lwgsm_mqtt_client_api_new(size_t tx_buff_len, size_t rx_buff_len) {
     LWGSM_DEBUGF(LWGSM_CFG_DBG_MQTT_API_TRACE,
               "[MQTT API] Creating client");
     lwgsm_mqtt_client_api_p client;
-    size_t size;
 
-    size = LWGSM_MEM_ALIGN(sizeof(*client));    /* Get size of client itself */
-
-
-    /* Create client APi structure */
-    client = lwgsm_mem_calloc(1, size);         /* Allocate client memory */
-    if (client != NULL) {
+    /* Allocate client memory */
+    if ((client = lwgsm_mem_calloc(1, LWGSM_MEM_ALIGN(sizeof(*client)))) != NULL) {
         /* Create MQTT raw client structure */
-        client->mc = lwgsm_mqtt_client_new(tx_buff_len, rx_buff_len);
-        if (client->mc != NULL) {
+        if ((client->mc = lwgsm_mqtt_client_new(tx_buff_len, rx_buff_len)) != NULL) {
             /* Create receive mbox queue */
-            if (lwgsm_sys_mbox_create(&client->rcv_mbox, 5)) {
+            if (lwgsm_sys_mbox_create(&client->rcv_mbox, LWGSM_CFG_MQTT_API_MBOX_SIZE)) {
                 /* Create synchronization semaphore */
                 if (lwgsm_sys_sem_create(&client->sync_sem, 1)) {
                     /* Create mutex */
@@ -242,26 +225,25 @@ lwgsm_mqtt_client_api_new(size_t tx_buff_len, size_t rx_buff_len) {
                         lwgsm_mqtt_client_set_arg(client->mc, client);  /* Set client to mqtt client argument */
                         return client;
                     } else {
-                        LWGSM_DEBUGF(LWGSM_CFG_DBG_MQTT_API_TRACE,
-                                   "[MQTT API] Cannot allocate mutex\r\n");
+                        LWGSM_DEBUGF(LWGSM_CFG_DBG_MQTT_API_TRACE_SEVERE,
+                                     "[MQTT API] Cannot allocate mutex\r\n");
                     }
                 } else {
-                    LWGSM_DEBUGF(LWGSM_CFG_DBG_MQTT_API_TRACE,
-                               "[MQTT API] Cannot allocate sync semaphore\r\n");
+                    LWGSM_DEBUGF(LWGSM_CFG_DBG_MQTT_API_TRACE_SEVERE,
+                                 "[MQTT API] Cannot allocate sync semaphore\r\n");
                 }
             } else {
-                LWGSM_DEBUGF(LWGSM_CFG_DBG_MQTT_API_TRACE,
-                           "[MQTT API] Cannot allocate receive queue\r\n");
+                LWGSM_DEBUGF(LWGSM_CFG_DBG_MQTT_API_TRACE_SEVERE,
+                             "[MQTT API] Cannot allocate receive queue\r\n");
             }
         } else {
-            LWGSM_DEBUGF(LWGSM_CFG_DBG_MQTT_API_TRACE,
-                       "[MQTT API] Cannot allocate MQTT client\r\n");
+            LWGSM_DEBUGF(LWGSM_CFG_DBG_MQTT_API_TRACE_SEVERE,
+                         "[MQTT API] Cannot allocate MQTT client\r\n");
         }
     } else {
-        LWGSM_DEBUGF(LWGSM_CFG_DBG_MQTT_API_TRACE,
-                   "[MQTT API] Cannot allocate memory for client\r\n");
+        LWGSM_DEBUGF(LWGSM_CFG_DBG_MQTT_API_TRACE_SEVERE,
+                     "[MQTT API] Cannot allocate memory for client\r\n");
     }
-
     lwgsm_mqtt_client_api_delete(client);
     client = NULL;
     return NULL;
@@ -311,11 +293,11 @@ lwgsm_mqtt_client_api_delete(lwgsm_mqtt_client_api_p client) {
  */
 lwgsm_mqtt_conn_status_t
 lwgsm_mqtt_client_api_connect(lwgsm_mqtt_client_api_p client, const char* host,
-                            lwgsm_port_t port, const lwgsm_mqtt_client_info_t* info) {
+                              lwgsm_port_t port, const lwgsm_mqtt_client_info_t* info) {
     if (client == NULL || host == NULL
         || !port || info == NULL) {
         LWGSM_DEBUGF(LWGSM_CFG_DBG_MQTT_API_TRACE_WARNING,
-                   "[MQTT API] Invalid parameters in function\r\n");
+                     "[MQTT API] Invalid parameters in function\r\n");
         return LWGSM_MQTT_CONN_STATUS_TCP_FAILED;
     }
 
@@ -323,11 +305,11 @@ lwgsm_mqtt_client_api_connect(lwgsm_mqtt_client_api_p client, const char* host,
     client->connect_resp = LWGSM_MQTT_CONN_STATUS_TCP_FAILED;
     lwgsm_sys_sem_wait(&client->sync_sem, 0);
     client->release_sem = 1;
-    if (lwgsm_mqtt_client_connect(client->mc, host, port, mqtt_evt, info) == lwgsmOK) {
+    if (lwgsm_mqtt_client_connect(client->mc, host, port, prv_mqtt_evt, info) == lwgsmOK) {
         lwgsm_sys_sem_wait(&client->sync_sem, 0);
     } else {
         LWGSM_DEBUGF(LWGSM_CFG_DBG_MQTT_API_TRACE_WARNING,
-                   "[MQTT API] Cannot connect to %s\r\n", host);
+                     "[MQTT API] Cannot connect to %s\r\n", host);
     }
     client->release_sem = 0;
     lwgsm_sys_sem_release(&client->sync_sem);
@@ -354,7 +336,7 @@ lwgsm_mqtt_client_api_close(lwgsm_mqtt_client_api_p client) {
         lwgsm_sys_sem_wait(&client->sync_sem, 0);
     } else {
         LWGSM_DEBUGF(LWGSM_CFG_DBG_MQTT_API_TRACE_WARNING,
-                   "[MQTT API] Cannot close API connection\r\n");
+                     "[MQTT API] Cannot close API connection\r\n");
     }
     client->release_sem = 0;
     lwgsm_sys_sem_release(&client->sync_sem);
@@ -371,7 +353,7 @@ lwgsm_mqtt_client_api_close(lwgsm_mqtt_client_api_p client) {
  */
 lwgsmr_t
 lwgsm_mqtt_client_api_subscribe(lwgsm_mqtt_client_api_p client, const char* topic,
-                              lwgsm_mqtt_qos_t qos) {
+                                lwgsm_mqtt_qos_t qos) {
     lwgsmr_t res = lwgsmERR;
 
     LWGSM_ASSERT("client != NULL", client != NULL);
@@ -385,7 +367,7 @@ lwgsm_mqtt_client_api_subscribe(lwgsm_mqtt_client_api_p client, const char* topi
         res = client->sub_pub_resp;
     } else {
         LWGSM_DEBUGF(LWGSM_CFG_DBG_MQTT_API_TRACE_WARNING,
-                   "[MQTT API] Cannot subscribe to topic %s\r\n", topic);
+                     "[MQTT API] Cannot subscribe to topic %s\r\n", topic);
     }
     client->release_sem = 0;
     lwgsm_sys_sem_release(&client->sync_sem);
@@ -415,7 +397,7 @@ lwgsm_mqtt_client_api_unsubscribe(lwgsm_mqtt_client_api_p client, const char* to
         res = client->sub_pub_resp;
     } else {
         LWGSM_DEBUGF(LWGSM_CFG_DBG_MQTT_API_TRACE_WARNING,
-                   "[MQTT API] Cannot unsubscribe from topic %s\r\n", topic);
+                     "[MQTT API] Cannot unsubscribe from topic %s\r\n", topic);
     }
     client->release_sem = 0;
     lwgsm_sys_sem_release(&client->sync_sem);
@@ -436,7 +418,7 @@ lwgsm_mqtt_client_api_unsubscribe(lwgsm_mqtt_client_api_p client, const char* to
  */
 lwgsmr_t
 lwgsm_mqtt_client_api_publish(lwgsm_mqtt_client_api_p client, const char* topic, const void* data,
-                            size_t btw, lwgsm_mqtt_qos_t qos, uint8_t retain) {
+                              size_t btw, lwgsm_mqtt_qos_t qos, uint8_t retain) {
     lwgsmr_t res = lwgsmERR;
 
     LWGSM_ASSERT("client != NULL", client != NULL);
@@ -452,7 +434,7 @@ lwgsm_mqtt_client_api_publish(lwgsm_mqtt_client_api_p client, const char* topic,
         res = client->sub_pub_resp;
     } else {
         LWGSM_DEBUGF(LWGSM_CFG_DBG_MQTT_API_TRACE_WARNING,
-                   "[MQTT API] Cannot publish new packet\r\n");
+                     "[MQTT API] Cannot publish new packet\r\n");
     }
     client->release_sem = 0;
     lwgsm_sys_sem_release(&client->sync_sem);
@@ -492,7 +474,7 @@ lwgsm_mqtt_client_api_is_connected(lwgsm_mqtt_client_api_p client) {
  */
 lwgsmr_t
 lwgsm_mqtt_client_api_receive(lwgsm_mqtt_client_api_p client, lwgsm_mqtt_client_api_buf_p* p,
-                            uint32_t timeout) {
+                              uint32_t timeout) {
     LWGSM_ASSERT("client != NULL", client != NULL);
     LWGSM_ASSERT("p != NULL", p != NULL);
 
@@ -510,7 +492,7 @@ lwgsm_mqtt_client_api_receive(lwgsm_mqtt_client_api_p client, lwgsm_mqtt_client_
     /* Check for MQTT closed event */
     if ((uint8_t*)(*p) == (uint8_t*)&mqtt_closed) {
         LWGSM_DEBUGF(LWGSM_CFG_DBG_MQTT_API_TRACE,
-                   "[MQTT API] Closed event received from queue\r\n");
+                     "[MQTT API] Closed event received from queue\r\n");
 
         *p = NULL;
         return lwgsmCLOSED;

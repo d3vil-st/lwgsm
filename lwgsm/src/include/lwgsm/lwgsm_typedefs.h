@@ -4,7 +4,7 @@
  */
 
 /*
- * Copyright (c) 2020 Tilen MAJERLE
+ * Copyright (c) 2022 Tilen MAJERLE
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -29,7 +29,7 @@
  * This file is part of LwGSM - Lightweight GSM-AT library.
  *
  * Author:          Tilen MAJERLE <tilen@majerle.eu>
- * Version:         v0.1.0
+ * Version:         v0.1.1
  */
 #ifndef LWGSM_HDR_DEFS_H
 #define LWGSM_HDR_DEFS_H
@@ -172,8 +172,10 @@ typedef enum {
  * \brief           GSM number type
  */
 typedef enum {
-    LWGSM_NUMBER_TYPE_NATIONAL = 129,           /*!< Number is national */
+    LWGSM_NUMBER_TYPE_UNKNOWN = 129,           /*!< Number is unknown */
     LWGSM_NUMBER_TYPE_INTERNATIONAL = 145,      /*!< Number is international */
+    LWGSM_NUMBER_TYPE_NATIONAL = 161,           /*!< Number is national */
+    LWGSM_NUMBER_TYPE_NETWORK = 177,           /*!< Number is network specific */
 } lwgsm_number_type_t;
 
 /**
@@ -413,6 +415,9 @@ typedef enum lwgsm_cb_type_t {
 
     LWGSM_EVT_DEVICE_PRESENT,                   /*!< Notification when device present status changes */
     LWGSM_EVT_DEVICE_IDENTIFIED,                /*!< Device identified event */
+
+    LWGSM_EVT_KEEP_ALIVE,                       /*!< Generic keep-alive event type, used as periodic timeout.
+                                                    Optionally enabled with \ref LWGSM_CFG_KEEP_ALIVE */
 
     LWGSM_EVT_SIGNAL_STRENGTH,                  /*!< Signal strength event */
 

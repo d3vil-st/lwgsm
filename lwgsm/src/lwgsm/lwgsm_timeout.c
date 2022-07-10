@@ -4,7 +4,7 @@
  */
 
 /*
- * Copyright (c) 2020 Tilen MAJERLE
+ * Copyright (c) 2022 Tilen MAJERLE
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -29,7 +29,7 @@
  * This file is part of LwGSM - Lightweight GSM-AT library.
  *
  * Author:          Tilen MAJERLE <tilen@majerle.eu>
- * Version:         v0.1.0
+ * Version:         v0.1.1
  */
 #include "lwgsm/lwgsm_private.h"
 #include "lwgsm/lwgsm_timeout.h"
@@ -124,9 +124,9 @@ lwgsm_timeout_add(uint32_t time, lwgsm_timeout_fn fn, void* arg) {
 
     LWGSM_ASSERT("fn != NULL", fn != NULL);
 
-    to = lwgsm_mem_calloc(1, sizeof(*to));      /* Allocate memory for timeout structure */
-    if (to == NULL) {
-        return lwgsmERR;
+    /* Allocate memory for timeout structure */
+    if ((to = lwgsm_mem_calloc(1, sizeof(*to))) == NULL) {
+        return lwgsmERRMEM;
     }
 
     lwgsm_core_lock();

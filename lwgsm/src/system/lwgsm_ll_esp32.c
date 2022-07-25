@@ -74,8 +74,7 @@ send_data(const void* data, size_t len) {
     /* Implement send function here */
     if (len) {
       len = uart_write_bytes(GSM_UART_NUM, (const char*) data, len);
-      // uart_wait_tx_done(GSM_UART_NUM, portMAX_DELAY);
-      // ESP_LOG_BUFFER_HEXDUMP(">", (const char*) data, len, ESP_LOG_INFO);
+      ESP_LOG_BUFFER_HEXDUMP(">", (const char*) data, len, ESP_LOG_DEBUG);
     }
     return len;                                 /* Return number of bytes actually sent to AT port */
 }

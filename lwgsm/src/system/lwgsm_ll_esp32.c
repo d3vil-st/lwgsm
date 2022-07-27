@@ -135,6 +135,10 @@ configure_uart(uint32_t baudrate) {
     ESP_ERROR_CHECK(uart_param_config(GSM_UART_NUM, &uart_config));
     ESP_LOGD(TAG, "RX: %d TX: %d", *LWGSM_CFG_RX, *LWGSM_CFG_TX);
     ESP_ERROR_CHECK(uart_set_pin(GSM_UART_NUM, *LWGSM_CFG_TX, *LWGSM_CFG_RX, 0, 0));
+    ESP_ERROR_CHECK(uart_write_bytes(GSM_UART_NUM, 'AT\r\n', strlen('AT\r\n')));
+    lwgsm_delay(100);
+    ESP_ERROR_CHECK(uart_write_bytes(GSM_UART_NUM, 'AT\r\n', strlen('AT\r\n')));
+    lwgsm_delay(100);
 }
 /**
  * \brief           Callback function called from initialization process
